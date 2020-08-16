@@ -27,14 +27,13 @@ if __name__ == "__main__":
       
       if (char == '\n'):
         # ENTER PRESSED
-        print("EXEC NOW...")
-      
+        config.interpret(stdin_string)
       elif (char =='\t'):
         # TABULATOR PRESSED
         
         #result = autocomplete(stdin_string)
         result = config.autocomplete(stdin_string)
-        if not result == None: 
+        if not result == False: 
           stdin_string = result
         continue
 
