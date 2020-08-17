@@ -1,7 +1,3 @@
-# A small websocket-client that can be used to query a wss service 
-# that is operating on the JSON-RPC 2.0 protocol.
-
-# Needed 'getch'
 import getch
 import sys
 
@@ -9,10 +5,10 @@ from configuration import config
 
 APP_RUN = True
 
+# TODO: implement command history
+
 if __name__ == "__main__":
-  # Welcome texts ...
-  print(f'tab for help... at any place :)')  
-  
+
   while(APP_RUN):
     stdin_string = ""
 
@@ -24,31 +20,23 @@ if __name__ == "__main__":
       
       # READ THE CHAR
       char = getch.getch()
-      
-      if (char == '\n'):
-        # ENTER PRESSED
-        config.interpret(stdin_string)
-      elif (char =='\t'):
-        # TABULATOR PRESSED
-        
-        #result = autocomplete(stdin_string)
+      if (char == '\n'):  # enter
+        if config.interpret(stdin_string) == True:
+          stdin_string = '' # Execution ok, clearing the string
+      elif (char =='\t'):  # tabulator
         result = config.autocomplete(stdin_string)
         if not result == False: 
           stdin_string = result
         continue
-
-      elif (hex(ord(char)) == '0x7f'):
-        # BACKSPACE PRESSED
+      elif (hex(ord(char)) == '0x7f'):  # backspace 
+        # TODO: Only deletion on the end are valid, there is 
+        #       no possibility to change a value in the middle
+        #       of the input
         stdin_string = stdin_string[:-1]
         continue
-
       else:
-        # APPEND THE STRING
+        # append the char to the string 
         stdin_string = stdin_string + char
-      
-    #if(str(stdin_string.rstrip()) == 'exit'):
-    #  APP_RUN = False
-
   # EXIT MAIN LOOP
   print(f'Goodbye my friend :(')
 

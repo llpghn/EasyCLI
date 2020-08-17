@@ -6,7 +6,7 @@ Implemented in Singleton-Pattern
 """
 
 from .conf import CONFIG
-
+import re
 # Printing informations for the possible actions.
 def print_actions():
   print("\n")
@@ -132,8 +132,8 @@ def interpret(input):
   if(len(parts) > 0): # Only enable interpreting when the user actually inputted something
     if("SET".find(parts[0].upper()) == 0):
       # Change a leave in the Config parts ...
-      #return changeValue(parts[1:])
-      print("SET MUST BE DONE")
+      return changeValue(parts[1:])
+      #print("SET MUST BE DONE")
     if("SHOW".find(parts[0].upper()) == 0):
       return showValue(parts[1:])
   return None
@@ -174,11 +174,62 @@ def showValue(path):
   if "_value" in sub_config:
     print("\nValue: " + str(sub_config["_value"]))
   else:
-    print("No valid element!")
+    print("\nNo valid element!")
     return False
   return True
   
+# setValue()
+# Used to change a value in the Config-File.
+# The last element needs to describe the new value and have to match
+# the value defined by the "_regex"-property.
+def changeValue(path):
+  # Searching for the value to be changed
+  sub_config = CONFIG
+  validated_input = "SET " 
 
+  # The last element should the  
+  for x in path[:-1]:
+    try:
+      sub_config = sub_config[x] 
+      validated_input = validated_input + x + " "
+    except KeyError:
+      # Normally on this part there would be the autocomplete 
+      # mechanismen, -> sh   a   ver     ma
+      #              -> SHOW APP VERSION MAYOR
+      ret = autocomplete(validated_input + x)
+      if ret != False:
+        validated_input = ret
+      else:
+        print('\n No valid element')
+        return False
+  sub_config = CONFIG # Now loading the elements.
+  for vs in validated_input.split()[1:]:
+    sub_config = sub_config[vs]
+  
+  
+  #print(sub_config)
+  
+  # Now at this point there should be a "_value"-property
+  # Have the element founded by slicing have a value property that can be displayed?
+  if "_value" in sub_config:
+
+    if "_regex" in sub_config:
+      # We found a _value-Prop that can be changed
+      pattern = re.compile(sub_config['_regex'])  # Compile Regex
+      if pattern.match(path[-1]):
+        # As defined per regex, the value is valid
+        print("Old value: " + str(sub_config["_value"]))
+        print("New value: " + str(path[-1]))
+        sub_config["_value"] = path[-1] # Set new value
+    else:
+      # No regex defined, set value to whatever was provided
+      print("Old value: " + str(sub_config["_value"]))
+      print("New value wo/: " + str(path[-1]))
+      sub_config["_value"] = path[-1] # Set new value
+  else:
+    print("\nNo valid element!")
+    return False
+  return True
 
 if __name__ == '__main__':
   print(f'Config module')
