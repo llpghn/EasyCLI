@@ -33,18 +33,10 @@ def checkOnValidAction(str):
 # completeAction()
 # Takes the first element of the input and tries to complete it to a valid action.
 def completeAction(possible_action):
-
-  if("SHOW".find(possible_action.upper()) == 0) and (len(possible_action) < 4):
-    return "SHOW "
-  
-  if("SET".find(possible_action.upper()) == 0) and (len(possible_action) < 3):
-    return "SET "
-  
-  if("UNDO".find(possible_action.upper()) == 0) and (len(possible_action) < 4):
-    return "UNDO "
-
-  if("EXIT".find(possible_action.upper()) == 0) and (len(possible_action) < 4):
-    return "EXIT "
+  valid_actions = ['show', 'set', 'exit', 'undo']
+  for valid_action in valid_actions:
+    if ((valid_action.find(possible_action.lower()) == 0) and (len(possible_action) < len(valid_action))):
+      return valid_action + ' '
   return None
 
 
