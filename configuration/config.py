@@ -5,10 +5,19 @@ The configuration have to be defined by the user.
 Implemented in Singleton-Pattern
 """
 
+# TODO: Wenn man das Commando ausführen will aber dann einen Wert 
+#       in dem commando hat der ausgeschrieben wurde, dann wird 
+#       das Commando nicht ausgeführt. Anscheinend bricht er dann 
+#       den Autocomplete ab wenn er den Qualified Commando bildet.
+
 from .conf import CONFIG
 import re
-# Printing informations for the possible actions.
+
 def print_actions():
+  """
+  Prints the basic function available while working with the
+  config-menue.
+  """
   print("\n")
   print("No valid action, valid actions are:")
   print("SHOW - ")
@@ -17,56 +26,62 @@ def print_actions():
   print("EXIT - ")
   return
 
-# checkOnValidAction()
-# Checks if the first element is a valid function supported by the module
-# param str [in]: first part of the string inputed by the user
-# return True: Valid action
-# return False: Not a valid function
+
 def checkOnValidAction(str):
+  """
+  Checks if 'str' is a valid action that is included in the validActions-list. 
+  If it is a valid action, then the action is returned as string. Else the 
+  function returnes false.
+
+  @param str [IN]: String that defines an action that will be checked
+  """
   validActions = ['SHOW', 'SET', 'EXIT', 'UNDO']
+  count_actions = 0
+  action = ""
   for validAction in validActions:
-    if( str.upper().find(validAction) == 0 ):
-      return True
+    if( validAction.find(str.upper()) == 0 ):
+      count_actions = count_actions + 1
+      action = validAction
+  if( count_actions == 1):
+    return action
   print_actions()
   return False
-
-# completeAction()
-# Takes the first element of the input and tries to complete it to a valid action.
-def completeAction(possible_action):
-  valid_actions = ['show', 'set', 'exit', 'undo']
-  for valid_action in valid_actions:
-    if ((valid_action.find(possible_action.lower()) == 0) and (len(possible_action) < len(valid_action))):
-      return valid_action + ' '
-  return None
-
-
+  
 # Main autocomplete function that searches the input if possible 
 # or prints some helping texts.
 def autocomplete(action):
   # No input was done...
-  if(len(action.split())==0): 
+  if( len(action.split()) == 0 ): 
     print_actions()
     return False # No input done, do nothing...
   
   # There is only word inputted. Check if is, or can be expanded
   # to a valid action
-  if(len(action.split())==1):
+  if( len(action.split()) == 1 ):
     op = action.split()[0]
-    res = completeAction(op)  # Try to complete the input to a valid action
-    if not res == None: 
-      return res
+    res = checkOnValidAction(op)
+    
+    if isinstance(res, str):
+      
+      #print (op + " ... " + res)
+      if not op.upper() == res.upper():
+        if not action[-1] == ' ':
+          return res + ' '
+    else:
+      print_actions()
+      return action
 
-    if( checkOnValidAction(op) == False):
-      return False
+    #if( checkOnValidAction(op) == False):
+    #  return False
 
   # At this part we have a valid function or we never made it up to
   # this point.
-  subconf = CONFIG  # Temporar config
-                    # Holds the reference to the last node that can be found
+  subconf = CONFIG  
   for layer in action.split()[1:]:
     if layer.upper() in subconf:
       subconf = subconf[layer.upper()] # Saving the smaller subconfig...
   
+
   #################################################
   # Check if we have reached a leave in the config structure
   #################################################
@@ -74,7 +89,7 @@ def autocomplete(action):
   for item in subconf:
     if item[0] != "_":
       contain_subnodes = True
-
+    
   ##############################################
   # Check if we can autocomplete the input
   ##############################################
@@ -84,15 +99,14 @@ def autocomplete(action):
     completion_string = ""
 
     for item in subconf:
-      #print('--- ' + item)
-      # Check if the item starts with what was inputted
+
       to_complete_action = action.split()[-1]
-      #print(to_complete_action)
+
       if item.upper().find(to_complete_action.upper()) == 0:
         automatches_found = automatches_found + 1
         completion_string = item
         print('---'+ completion_string)
-    # Have we found a Entry to that we can autocomplete
+
     if automatches_found == 1:
       new_action = ""
       for sub_action in action.split()[:-1]:
@@ -105,9 +119,7 @@ def autocomplete(action):
   ###################################################
   print("\n")
   if contain_subnodes:
-    # Print available subnodes
     for item in subconf: 
-      # Schreibe alle Nodes die kein Blatt darstellen
       if item[0] != '_':
         print(f'{item}') 
   else:
@@ -170,6 +182,7 @@ def showValue(path):
     return False
   return True
   
+
 # setValue()
 # Used to change a value in the Config-File.
 # The last element needs to describe the new value and have to match
@@ -194,15 +207,12 @@ def changeValue(path):
       else:
         print('\n No valid element')
         return False
+  
+
   sub_config = CONFIG # Now loading the elements.
   for vs in validated_input.split()[1:]:
     sub_config = sub_config[vs]
   
-  
-  #print(sub_config)
-  
-  # Now at this point there should be a "_value"-property
-  # Have the element founded by slicing have a value property that can be displayed?
   if "_value" in sub_config:
 
     if "_regex" in sub_config:
