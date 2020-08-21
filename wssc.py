@@ -10,17 +10,16 @@ class CLI_Handler:
   # TODO: Quit-Command alway possible
   # TODO: Implement Command-History
   # TODO: If theres no input and you press backsplash, error comes up
-  
-  run = True        # True = Runs main loop, False = Ends main loop
-  command_history = []  # Stores commands as history
-  history_counter = 0
-  cursor_position = 0
-  reprint_input = True  # If it is set to true, then the string will be
-                      # reprinted to the console.
 
   CONSOLE_UNDERLINE = r'\033[4m'
   CONSOLE_CLEAR_FORMAT = r'\033[0m'
   VALID_CHAR_REGEX = re.compile(r"^[a-z\d\-_\s]+$")
+
+
+  run = True        # True = Runs main loop, False = Ends main loop
+
+  cursor_position = 0
+
 
 
 
@@ -44,13 +43,11 @@ class CLI_Handler:
         else:
           print(f'> {str_input}', end='', flush = True)
 
-
-
         # READ THE CHAR
         char = getch.getch()
+        print(hex(ord(char)))
 
-
-        if (char == '\n'):  # enter
+        if (hex(ord(char)) == '0xa'):  # enter
           print(str_input + '|')
           if config.interpret(str_input) == True:
             # addCommandToHistory(str_input)
@@ -59,7 +56,7 @@ class CLI_Handler:
           
           continue
 
-        elif (char =='\t'):  # tabulator
+        elif (hex(ord(char)) =='0x9'):  # tabulator
           result = config.autocomplete(str_input)
           if not result == False: 
             str_input = result
