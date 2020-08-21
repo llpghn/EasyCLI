@@ -11,95 +11,109 @@ class CLI_Handler:
   # TODO: Implement Command-History
   # TODO: If theres no input and you press backsplash, error comes up
 
-  CONSOLE_UNDERLINE = r'\033[4m'
-  CONSOLE_CLEAR_FORMAT = r'\033[0m'
+  CONSOLE_UNDERLINE = '\033[4m'
+  CONSOLE_CLEAR_FORMAT = '\033[0m'
   VALID_CHAR_REGEX = re.compile(r"^[a-z\d\-_\s]+$")
+
+  # Key-Codes for input validation
+  ENTER_HEX_KEYCODE = '0xa'
+  TABULATOR_HEX_KEYCODE = '0x9'
+  ARROWUP_HEX_KEYCODE = '0x41'
+  ARROWLEFT_HEX_KEYCODE = '0x44'
+  ARROWRIGHT_HEX_KEYCODE = '0x43'
+  BACKSPACE_HEX_KEYCODE = '0x7f'
+
 
 
   run = True        # True = Runs main loop, False = Ends main loop
-
   cursor_position = 0
-
-
-
+  str_input = ""
 
   def __init__(self):
     print("Init Class Handler")
 
+  
+  def printConsoleOutput(self) -> None:
+    """
+    Prints the Input from the console back to the console.
+    """
+    print(f'\r                                                 ' , end='', flush = True)
+    print(f'\r', end='', flush= True)
+    if (self.cursor_position != len(self.str_input)):
+      # Cursor is somewhat in the middle of the text
+      print('> ' + self.str_input[:self.cursor_position], end = '')
+      print(self.CONSOLE_UNDERLINE + self.str_input[self.cursor_position] + self.CONSOLE_CLEAR_FORMAT, end = '')
+      print(self.str_input[self.cursor_position+1:], end = '', flush=True)
+    else:
+      print(f'> {self.str_input}', end='', flush = True)
+    return 
+
+  def handleEnter(self) -> None:
+    if config.interpret(self.str_input) == True:
+     self.str_input = '' # Execution ok, clearing the string
+     self.cursor_position = 0
+
+  def handleTabulator(self) -> None:
+    result = config.autocomplete(self.str_input)
+    if not result == False: 
+      self.str_input = result
+      self.cursor_position = len(self.str_input)
+    return
+
+  def handleBackspace(self) -> None:
+    self.history_counter = 0
+    #str_input = str_input[:-1]
+    self.str_input = self.str_input[:self.cursor_position-1] + self.str_input[self.cursor_position:]
+    self.cursor_position = self.cursor_position -1
+    return
+
+  def appendCharToInput(self, char) -> None:
+    if (self.VALID_CHAR_REGEX.match(str(char))):
+      if (self.cursor_position != len(self.str_input)):
+        # Cursor is somewhat in the middle of the text
+        input_first_part = self.str_input[:self.cursor_position]
+        input_second_part = self.str_input[self.cursor_position:]
+        self.str_input = input_first_part + char + input_second_part
+      else:
+        self.str_input = self.str_input + char
+      self.cursor_position = self.cursor_position + 1
+    return
+
+  def handleArrowLeft(self) -> None:
+    if (self.cursor_position > 1):
+      self.cursor_position = self.cursor_position - 1
+  
+  def handleArrowRight(self) -> None:
+    if (self.cursor_position < len(self.str_input)):
+      self.cursor_position = self.cursor_position + 1
+  
   def run(self):
     while(self.run):
-      str_input = ""
 
-      while (True):
+      self.printConsoleOutput()
+      char = getch.getch()
+      #print(hex(ord(char)))
 
-        print(f'\r                                                 ' , end='', flush = True)
-        print(f'\r', end='', flush= True)
-      
-        if (self.cursor_position != len(str_input)):
-          # Cursor is somewhat in the middle of the text
-          print('> ' + str_input[:self.cursor_position], end = '')
-          print('\033[4m' + str_input[self.cursor_position] +'\033[0m', end = '')
-          print(str_input[self.cursor_position+1:], end = '', flush=True)
-        else:
-          print(f'> {str_input}', end='', flush = True)
+      if (hex(ord(char)) == self.ENTER_HEX_KEYCODE): 
+        self.handleEnter()
 
-        # READ THE CHAR
-        char = getch.getch()
-        print(hex(ord(char)))
+      elif (hex(ord(char)) == self.TABULATOR_HEX_KEYCODE): 
+        self.handleTabulator()
 
-        if (hex(ord(char)) == '0xa'):  # enter
-          print(str_input + '|')
-          if config.interpret(str_input) == True:
-            # addCommandToHistory(str_input)
-            str_input = '' # Execution ok, clearing the string
-            self.cursor_position = 0
-          
-          continue
+      #elif (hex(ord(char)) == self.ARROWUP_HEX_KEYCODE): 
+        # str_input = getCommandFromHistory()
 
-        elif (hex(ord(char)) =='0x9'):  # tabulator
-          result = config.autocomplete(str_input)
-          if not result == False: 
-            str_input = result
-            self.cursor_position = len(str_input)
-            # addCommandToHistory(str_input)
-          
-          continue
+      elif (hex(ord(char)) == self.ARROWLEFT_HEX_KEYCODE): 
+        self.handleArrowLeft()
 
-        elif (hex(ord(char)) == '0x41'):  # Arrow up
-          # str_input = getCommandFromHistory()
-          
-          continue
+      elif (hex(ord(char)) == self.ARROWRIGHT_HEX_KEYCODE):
+        self.handleArrowRight()
 
-        elif (hex(ord(char)) == '0x44'):  # Arrow left
-          #print("Arrow left")
-          if (self.cursor_position > 1):
-            self.cursor_position = self.cursor_position - 1
-          continue
+      elif (hex(ord(char)) == self.BACKSPACE_HEX_KEYCODE):
+        self.handleBackspace()
 
-        elif (hex(ord(char)) == '0x43'):  # Arrow right
-          if (self.cursor_position < len(str_input)):
-            self.cursor_position = self.cursor_position + 1
-          continue
-
-        elif (hex(ord(char)) == '0x7f'):  # backspace 
-          self.history_counter = 0
-          #str_input = str_input[:-1]
-          str_input = str_input[:self.cursor_position-1] + str_input[self.cursor_position:]
-          self.cursor_position = self.cursor_position -1
-          continue
-
-        else:
-          # append the char to the string 
-          if (self.VALID_CHAR_REGEX.match(str(char))):
-            if (self.cursor_position != len(str_input)):
-              # Cursor is somewhat in the middle of the text
-              input_first_part = str_input[:self.cursor_position]
-              input_second_part = str_input[self.cursor_position:]
-              str_input = input_first_part + char + input_second_part
-            else:
-              str_input = str_input + char
-            self.cursor_position = self.cursor_position + 1
-          continue
+      else:
+        self.appendCharToInput(char)
 
 
 if __name__ == "__main__":
